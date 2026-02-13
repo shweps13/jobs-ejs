@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 require("express-async-errors");
-// const connectDB = require("./db/connect");
+const connectDB = require("./db/connect");
 const app = express();
 
 const session = require("express-session");
@@ -35,6 +35,12 @@ if (app.get("env") === "production") {
 
 app.use(session(sessionParms));
 app.use(require("connect-flash")());
+
+app.use(require("./middleware/storeLocals"));
+app.get("/", (req, res) => {
+    res.render("index");
+});
+app.use("/sessions", require("./routes/sessionRoutes"));
 
 // secret word handling
 // let secretWord = "syzygy";
@@ -70,7 +76,7 @@ const port = process.env.PORT || 3000;
 
 const start = async () => {
     try {
-        // await connectDB(process.env.MONGO_URI);
+        await connectDB(process.env.MONGO_URI);
         app.listen(port, () =>
             console.log(`Server is listening on port ${port}...`)
         );
