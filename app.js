@@ -2,7 +2,13 @@ require("dotenv").config();
 const express = require("express");
 require("express-async-errors");
 const connectDB = require("./db/connect");
+const passport = require("passport");
+const passportInit = require("./passport/passportInit");
+
 const app = express();
+passportInit();
+app.use(passport.initialize());
+app.use(passport.session());
 
 const session = require("express-session");
 
