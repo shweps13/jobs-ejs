@@ -8,9 +8,21 @@ const passportInit = require("./passport/passportInit");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
+const cookieParser = require("cookie-parser")
+const csrf = require("host-csrf");
+const csrfMiddleware = csrf.csrf();
+
+
 const app = express();
 app.set("view engine", "ejs");
 app.use(require("body-parser").urlencoded({ extended: true }));
+app.use(cookieParser(process.env.SESSION_SECRET))
+app.use(csrfMiddleware);
+
+app.use((req, res, next) => {
+    csrf.getToken(req, res);
+    next();
+});
 
 const url = process.env.MONGO_URI;
 const store = new MongoDBStore({
