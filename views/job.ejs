@@ -1,0 +1,37 @@
+<%- include("partials/head.ejs") %>
+<%- include("partials/header.ejs") %>
+<% const data = job || (typeof body !== 'undefined' ? body : {}) || {}; %>
+<% if (job) { %>
+  <h2>Edit job</h2>
+  <form method="POST" action="/jobs/update/<%= job.id %>">
+<% } else { %>
+  <h2>Add new job</h2>
+  <form method="POST" action="/jobs">
+<% } %>
+  <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+  <div>
+    <label for="company">Company</label>
+    <input id="company" name="company" value="<%= data.company || '' %>" required />
+  </div>
+  <div>
+    <label for="position">Position</label>
+    <input id="position" name="position" value="<%= data.position || '' %>" required />
+  </div>
+  <div>
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="pending" <%= (data.status || '') === 'pending' ? 'selected' : '' %>>pending</option>
+      <option value="interview" <%= data.status === 'interview' ? 'selected' : '' %>>interview</option>
+      <option value="declined" <%= data.status === 'declined' ? 'selected' : '' %>>declined</option>
+    </select>
+  </div>
+  <div>
+    <% if (job) { %>
+      <button>Update</button>
+    <% } else { %>
+      <button>Create</button>
+    <% } %>
+    <a href="/jobs"><button type="button">Cancel</button></a>
+  </div>
+</form>
+<%- include("partials/footer.ejs") %>
