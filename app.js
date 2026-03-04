@@ -4,6 +4,9 @@ require("express-async-errors");
 const connectDB = require("./db/connect");
 const passport = require("passport");
 const passportInit = require("./passport/passportInit");
+const helmet = require("helmet");
+const xss = require("xss-clean");
+const rateLimit = require("express-rate-limit");
 
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
@@ -12,9 +15,11 @@ const cookieParser = require("cookie-parser")
 const csrf = require("host-csrf");
 const csrfMiddleware = csrf.csrf();
 
-
 const app = express();
 app.set("view engine", "ejs");
+app.use(helmet());
+app.use(xss());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(require("body-parser").urlencoded({ extended: true }));
 app.use(cookieParser(process.env.SESSION_SECRET))
 app.use(csrfMiddleware);
@@ -61,8 +66,10 @@ app.use("/sessions", require("./routes/sessionRoutes"));
 
 
 const secretWordRouter = require("./routes/secretWord");
+const jobsRouter = require("./routes/jobs");
 const auth = require("./middleware/auth");
 app.use("/secretWord", auth, secretWordRouter);
+app.use("/jobs", auth, jobsRouter);
 
 app.use((req, res) => {
     res.status(404).send(`That page (${req.url}) was not found.`);
