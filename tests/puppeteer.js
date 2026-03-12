@@ -59,4 +59,49 @@ describe("jobs-ejs puppeteer test", function () {
             console.log("copyright text: ", copyrText);
         });
     });
+    describe("puppeteer job operations", function () {
+        this.timeout(20000);
+        it("should open jobs list and show 20 entries", async function () {
+            const { expect } = await import("chai");
+            const jobsLink = await page.waitForSelector('a[href="/jobs"]');
+            await jobsLink.click();
+            await page.waitForNavigation();
+            await page.waitForSelector("#jobs-table");
+            const content = await page.content();
+            const trParts = content.split("<tr>");
+            expect(trParts.length).to.equal(21);
+        });
+        it("open 'add job' form and have company, position, and add button", async function () {
+            const { expect } = await import("chai");
+            const addJobLink = await page.waitForSelector('a[href="/jobs/new"]');
+            await addJobLink.click();
+            await page.waitForNavigation();
+            await page.waitForSelector('form[action="/jobs"]');
+            this.companyField = await page.$('input[name="company"]');
+            this.positionField = await page.$('input[name="position"]');
+            this.createButton = await page.$('form[action="/jobs"] button');
+            expect(this.companyField).to.not.be.null;
+            expect(this.positionField).to.not.be.null;
+            expect(this.createButton).to.not.be.null;
+        });
+        it("submit new job have entry in db", async function () {
+            const { expect } = await import("chai");
+            const companyValue = "microsoft";
+            const positionValue = "developer";
+            await this.companyField.type(companyValue);
+            await this.positionField.type(positionValue);
+            await this.createButton.click();
+            await page.waitForNavigation();
+            await page.waitForSelector("#jobs-table");
+            const content = await page.content();
+            expect(content).to.include("Job created");
+            const jobs = await Job.find({ createdBy: testUser._id })
+                .sort({ createdAt: -1 })
+                .limit(1)
+                .lean();
+            expect(jobs.length).to.equal(1);
+            expect(jobs[0].company).to.equal(companyValue);
+            expect(jobs[0].position).to.equal(positionValue);
+        });
+    });
 });
