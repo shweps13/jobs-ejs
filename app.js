@@ -65,6 +65,26 @@ app.get("/", (req, res) => {
 app.use("/sessions", require("./routes/sessionRoutes"));
 
 
+app.use((req, res, next) => {
+    if (req.path == "/multiply") {
+        res.set("Content-Type", "application/json");
+    } else {
+        res.set("Content-Type", "text/html");
+    }
+    next();
+});
+
+app.get("/multiply", (req, res) => {
+    const result = req.query.first * req.query.second;
+    if (result.isNaN) {
+        result = "NaN";
+    } else if (result == null) {
+        result = "null";
+    }
+    res.json({ result: result });
+});
+
+
 const secretWordRouter = require("./routes/secretWord");
 const jobsRouter = require("./routes/jobs");
 const auth = require("./middleware/auth");
@@ -82,15 +102,26 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 3000;
 
+let mongoURL = process.env.MONGO_URI;
+if (process.env.NODE_ENV == "test") {
+    mongoURL = process.env.MONGO_URI_TEST;
+}
+
 const start = async () => {
     try {
-        await connectDB(process.env.MONGO_URI);
-        app.listen(port, () =>
+        await connectDB(mongoURL || process.env.MONGO_URI);
+        const server = app.listen(port, () =>
             console.log(`Server is listening on port ${port}...`)
         );
+        return server;
     } catch (error) {
         console.log(error);
+        return null;
     }
 };
 
-start();
+if (process.env.NODE_ENV !== "test") {
+    start();
+}
+
+module.exports = { app, start };
